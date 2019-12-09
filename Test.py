@@ -289,25 +289,23 @@ plt.show()
 
 
 
+###############################################################################
+###########################   ASSOCIATION ######################################
+###############################################################################
 
 
+############################## APRIORI ########################################
+'''
+customer_id = []
+for i in range(0,500):
+    customer_id.append([str(dataset.values[i,j]) for j in range(0,13)])
 
-
-# Tgeriuh82yo40pyt84tghio
-
-
-
-
-
-
-
+# Training Apriori on the dataset 
+from apyori import apriori    
+rules = apriori(transactions = customer_id, min_support, min_confidence, min_lift ,min_lenght = 2)
 
 
 '''
-
-
-
-
 
 
 
