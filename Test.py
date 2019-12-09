@@ -95,7 +95,7 @@ dataset = dataset.drop('Work_float',axis=1)
 
 #deleting Premiums Outliers
 Premiums_range =[]
-for i in range (0,15000):
+for i in range (0,2000):
     Premiums_range.append(i)
 dataset = dataset.loc[dataset['Motor'].isin(list(Premiums_range))]
 dataset = dataset.loc[dataset['Household'].isin(list(Premiums_range))]
@@ -103,6 +103,16 @@ dataset = dataset.loc[dataset['Health'].isin(list(Premiums_range))]
 dataset = dataset.loc[dataset['Life'].isin(list(Premiums_range))]
 dataset = dataset.loc[dataset['Work'].isin(list(Premiums_range))]
 
+'''
+from sklearn.preprocessing import StandardScaler
+sc = StandardScaler()
+dataset = sc.fit_transform(dataset) 
+dataset = pd.DataFrame(dataset)
+'''
+
+# new columns
+dataset['Annual_spend'] = dataset['Motor'] + dataset['Household'] + dataset['Health'] +dataset['Life'] +dataset['Work']
+dataset['Annual_income'] = dataset['GrossMonthlySalary'] *12
 
 
 
@@ -262,17 +272,42 @@ plt.ylabel('Number of Customers')
 plt.show()
 
 ###############################################################################
-###########################   Clustering ######################################
+###########################   ClASSIFICATION   ################################
 ###############################################################################
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+###############################################################################
+###########################   CLUSTERING ######################################
+###############################################################################
+
+'''
+import seaborn as sns; sns.set()  # for plot styling
+%matplotlib inline
+plt.rcParams['figure.figsize'] = (16, 9)
+plt.style.use('ggplot')
+#Visualizing the data - displot
+plot_income = sns.distplot(dataset["Annual_income"])
+#plot_spend = sns.distplot(dataset["Annual_spend"])
+plt.xlabel('Income / spend')
+
+'''
+
 ############################## K-MEANS ########################################
 
-
 #Picking the 2 variables that we are interst in 
-
-X = dataset.iloc[:, [2, 6]].values
-
+X = dataset.iloc[:, [12,13 ]].values
 '''
 # Taking care of missing data NaN
 from sklearn.preprocessing import Imputer
@@ -280,7 +315,6 @@ imputer = Imputer(missing_values = 'NaN', strategy = 'mean', axis = 0)
 imputer = imputer.fit(X[:, 0:5])
 X[:, 0:5] = imputer.transform(X[:, 0:5])
 '''
-
 # Using the elbow method to find the optimal number of clusters
 from sklearn.cluster import KMeans
 wcss = []
@@ -294,16 +328,15 @@ plt.xlabel('Number of clusters')
 plt.ylabel('WCSS')
 plt.show()
 
-
 # Fitting K-Means to the dataset
-kmeans = KMeans(n_clusters = 3, init = 'k-means++', max_iter = 1000, n_init = 10, random_state = 0)
+kmeans = KMeans(n_clusters = 2, init = 'k-means++', max_iter = 1000, n_init = 10, random_state = 0)
 y_kmeans = kmeans.fit_predict(X)
 
-
 # Visualising the clusters ONLY FOR 2D DIMENSIONAL CLUSTERS!!!!!!!!!!!!
-plt.scatter(X[y_kmeans == 0, 0], X[y_kmeans == 0, 1], s = 100, c = 'red', label = 'Cluster 1')
-plt.scatter(X[y_kmeans == 1, 0], X[y_kmeans == 1, 1], s = 100, c = 'blue', label = 'Cluster 2')
-plt.scatter(X[y_kmeans == 2, 0], X[y_kmeans == 2, 1], s = 100, c = 'green', label = 'Cluster 3')
+plt.scatter(X[y_kmeans == 0, 0], X[y_kmeans == 0, 1], s = 1, c = 'red', label = 'Cluster 1')
+plt.scatter(X[y_kmeans == 1, 0], X[y_kmeans == 1, 1], s = 1, c = 'blue', label = 'Cluster 2')
+#plt.scatter(X[y_kmeans == 2, 0], X[y_kmeans == 2, 1], s = 1, c = 'green', label = 'Cluster 3')
+#plt.scatter(X[y_kmeans == 3, 0], X[y_kmeans == 3, 1], s = 1, c = 'cyan', label = 'Cluster 4')
 plt.scatter(kmeans.cluster_centers_[:, 0], kmeans.cluster_centers_[:, 1], s = 300, c = 'yellow', label = 'Centroids')
 plt.title('Clusters of customers')
 plt.xlabel('Gros Monthly Salary')
@@ -323,20 +356,19 @@ plt.xlabel('Customers')
 plt.ylabel('Euclidean distances')
 plt.show()
 '''
-
-
 # Fitting Hierarchical Clustering to the dataset
 from sklearn.cluster import AgglomerativeClustering
-hc = AgglomerativeClustering(n_clusters = 4, affinity = 'euclidean', linkage = 'ward')
+hc = AgglomerativeClustering(n_clusters = 2, affinity = 'euclidean', linkage = 'ward')
+
 # WARD = method that minimize the deviation in each cluster 
 y_hc = hc.fit_predict(X)
 
 # Visualising the clusters
-plt.scatter(X[y_hc == 0, 0], X[y_hc == 0, 1], s = 100, c = 'red', label = 'Cluster 1')
-plt.scatter(X[y_hc == 1, 0], X[y_hc == 1, 1], s = 100, c = 'blue', label = 'Cluster 2')
-plt.scatter(X[y_hc == 2, 0], X[y_hc == 2, 1], s = 100, c = 'green', label = 'Cluster 3')
-plt.scatter(X[y_hc == 3, 0], X[y_hc == 3, 1], s = 100, c = 'cyan', label = 'Cluster 4')
-plt.scatter(X[y_hc == 4, 0], X[y_hc == 4, 1], s = 100, c = 'magenta', label = 'Cluster 5')
+plt.scatter(X[y_hc == 0, 0], X[y_hc == 0, 1], s = 1, c = 'red', label = 'Cluster 1')
+plt.scatter(X[y_hc == 1, 0], X[y_hc == 1, 1], s = 1, c = 'blue', label = 'Cluster 2')
+plt.scatter(X[y_hc == 2, 0], X[y_hc == 2, 1], s = 1, c = 'green', label = 'Cluster 3')
+#plt.scatter(X[y_hc == 3, 0], X[y_hc == 3, 1], s = 100, c = 'cyan', label = 'Cluster 4')
+#plt.scatter(X[y_hc == 4, 0], X[y_hc == 4, 1], s = 100, c = 'magenta', label = 'Cluster 5')
 plt.title('Clusters of customers')
 plt.xlabel('Gross Monthly Salary')
 plt.ylabel('CMV')
