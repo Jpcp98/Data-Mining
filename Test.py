@@ -38,12 +38,70 @@ Age.columns = ['age']
 dataset= pd.merge(Age,dataset, right_index=True, left_index=True)
 
 #deleting space in columns name
-dataset = dataset.rename(columns={'First Policy´s Year':'FirstPolicyYear','Customer Monetary Value':'CustomerMonetaryValue','Gross Monthly Salary':'GrossMonthlySalary'})
+dataset = dataset.rename(columns={'First Policy´s Year':'FirstPolicyYear','Customer Monetary Value':'CustomerMonetaryValue_float','Gross Monthly Salary':'GrossMonthlySalary','Premiums in LOB: Motor':'Motor_float','Premiums in LOB: Household':'Household_float','Premiums in LOB: Health':'Health_float','Premiums in LOB:  Life':'Life_float','Premiums in LOB: Motor':'Motor_float','Premiums in LOB: Work Compensations':'Work_float'})
 
-#float to int 
-dataset['CustomerMonetaryValue'] = dataset.CustomerMonetaryValue.astype(int)
+#deleting NaN values
+dataset = dataset.fillna(dataset.mean())
 
-#filtering impossible values for salary and CMV
+#deleting claims rate because correlation = 1 with CMV
+dataset = dataset.drop('Claims Rate',axis=1)
+
+
+#Cleaning Outliers
+age_boundary = []
+for i in range(0,100):
+    age_boundary.append(i)
+dataset = dataset.loc[dataset['age'].isin(list(age_boundary))]
+
+FirstPolicyYear = []
+for i in range(1920,2020):
+    FirstPolicyYear.append(i)
+dataset = dataset.loc[dataset['FirstPolicyYear'].isin(list(FirstPolicyYear))]
+
+GrossMonthlySalary = []
+for i in range(500,15000):
+    GrossMonthlySalary.append(i)
+dataset = dataset.loc[dataset['GrossMonthlySalary'].isin(list(GrossMonthlySalary))]   
+
+float_to_int = dataset['CustomerMonetaryValue_float'].astype(int)
+dataset = dataset.merge(float_to_int.rename('CustomerMonetaryValue'), left_index=True, right_index=True)
+dataset = dataset.drop('CustomerMonetaryValue_float',axis=1)
+
+CMV = []
+for i in range(-500,2500):
+    CMV.append(i)
+dataset = dataset.loc[dataset['CustomerMonetaryValue'].isin(list(CMV))]   
+
+
+float_to_int = dataset['Motor_float'].astype(int)
+dataset = dataset.merge(float_to_int.rename('Motor'), left_index=True, right_index=True)
+dataset = dataset.drop('Motor_float',axis=1)
+
+float_to_int = dataset['Household_float'].astype(int)
+dataset = dataset.merge(float_to_int.rename('Household'), left_index=True, right_index=True)
+dataset = dataset.drop('Household_float',axis=1)
+
+float_to_int = dataset['Health_float'].astype(int)
+dataset = dataset.merge(float_to_int.rename('Health'), left_index=True, right_index=True)
+dataset = dataset.drop('Health_float',axis=1)
+
+float_to_int = dataset['Life_float'].astype(int)
+dataset = dataset.merge(float_to_int.rename('Life'), left_index=True, right_index=True)
+dataset = dataset.drop('Life_float',axis=1)
+
+float_to_int = dataset['Work_float'].astype(int)
+dataset = dataset.merge(float_to_int.rename('Work'), left_index=True, right_index=True)
+dataset = dataset.drop('Work_float',axis=1)
+
+#deleting Premiums Outliers
+Premiums_range =[]
+for i in range (0,15000):
+    Premiums_range.append(i)
+dataset = dataset.loc[dataset['Motor'].isin(list(Premiums_range))]
+dataset = dataset.loc[dataset['Household'].isin(list(Premiums_range))]
+dataset = dataset.loc[dataset['Health'].isin(list(Premiums_range))]
+dataset = dataset.loc[dataset['Life'].isin(list(Premiums_range))]
+dataset = dataset.loc[dataset['Work'].isin(list(Premiums_range))]
 
 
 
@@ -212,22 +270,22 @@ plt.show()
 
 
 #Picking the 2 variables that we are interst in 
-X = dataset.iloc[:, [4, 6]].values
 
+X = dataset.iloc[:, [2, 6]].values
+
+'''
 # Taking care of missing data NaN
 from sklearn.preprocessing import Imputer
 imputer = Imputer(missing_values = 'NaN', strategy = 'mean', axis = 0)
 imputer = imputer.fit(X[:, 0:5])
 X[:, 0:5] = imputer.transform(X[:, 0:5])
-
-#float to int 
-#dataset['CustomerMonetaryValue'] = dataset.CustomerMonetaryValue.astype(int)
+'''
 
 # Using the elbow method to find the optimal number of clusters
 from sklearn.cluster import KMeans
 wcss = []
 for i in range(1, 11):
-    kmeans = KMeans(n_clusters = i, init = 'k-means++', max_iter = 300, n_init = 10, random_state = 0)
+    kmeans = KMeans(n_clusters = i, init = 'k-means++', max_iter = 1000, n_init = 10, random_state = 0)
     kmeans.fit(X)
     wcss.append(kmeans.inertia_)
 plt.plot(range(1, 11), wcss)
@@ -238,7 +296,7 @@ plt.show()
 
 
 # Fitting K-Means to the dataset
-kmeans = KMeans(n_clusters = 4, init = 'k-means++', max_iter = 300, n_init = 10, random_state = 0)
+kmeans = KMeans(n_clusters = 3, init = 'k-means++', max_iter = 1000, n_init = 10, random_state = 0)
 y_kmeans = kmeans.fit_predict(X)
 
 
@@ -246,8 +304,6 @@ y_kmeans = kmeans.fit_predict(X)
 plt.scatter(X[y_kmeans == 0, 0], X[y_kmeans == 0, 1], s = 100, c = 'red', label = 'Cluster 1')
 plt.scatter(X[y_kmeans == 1, 0], X[y_kmeans == 1, 1], s = 100, c = 'blue', label = 'Cluster 2')
 plt.scatter(X[y_kmeans == 2, 0], X[y_kmeans == 2, 1], s = 100, c = 'green', label = 'Cluster 3')
-plt.scatter(X[y_kmeans == 3, 0], X[y_kmeans == 3, 1], s = 100, c = 'cyan', label = 'Cluster 4')
-plt.scatter(X[y_kmeans == 4, 0], X[y_kmeans == 4, 1], s = 100, c = 'magenta', label = 'Cluster 5')
 plt.scatter(kmeans.cluster_centers_[:, 0], kmeans.cluster_centers_[:, 1], s = 300, c = 'yellow', label = 'Centroids')
 plt.title('Clusters of customers')
 plt.xlabel('Gros Monthly Salary')
